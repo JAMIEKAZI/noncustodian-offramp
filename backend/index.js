@@ -4,20 +4,21 @@ import dotenv from "dotenv";
 import { getContractDetails } from "./contractService.js";
 import { triggerFiatPayout, verifyBankAccount, getExchangeRate } from "./roqquService.js";
 
-require("dotenv").config();
-const express = require('express');
+// Initialize dotenv for ES Modules
+dotenv.config();
 
-app.use(cors());
-app.use(express.json()); 
-
+const app = express();
 const port = process.env.PORT || 3000;
-const cors = require('cors');
 
+// Apply CORS properly once
 app.use(cors({
   origin: ['https://rampme.vercel.app', 'http://localhost:3000'],
   methods: ['GET', 'POST', 'PUT', 'DELETE', 'OPTIONS'],
   credentials: true
 }));
+
+// Parse incoming JSON requests
+app.use(express.json()); 
 
 app.get("/", (req, res) => {
   res.send("🚀 Stablecoin Off-Ramp API Backend is Live!");
