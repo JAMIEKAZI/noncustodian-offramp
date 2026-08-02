@@ -14,7 +14,7 @@ export function AppKitProvider({ children }) {
       const { baseSepolia, solanaDevnet } = await import('@reown/appkit/networks');
       const { PhantomWalletAdapter, SolflareWalletAdapter } = await import('@solana/wallet-adapter-wallets');
 
-      const projectId = process.env.NEXT_PUBLIC_PROJECT_ID || "PASTE_YOUR_PROJECT_ID_HERE";
+      const projectId = process.env.NEXT_PUBLIC_PROJECT_ID || "3b5e10937fca77c0a9752ff5b36939e3";
 
       const ethersAdapter = new EthersAdapter();
       const solanaWeb3JsAdapter = new SolanaAdapter({
