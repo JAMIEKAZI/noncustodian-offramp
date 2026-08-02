@@ -4,13 +4,20 @@ import dotenv from "dotenv";
 import { getContractDetails } from "./contractService.js";
 import { triggerFiatPayout, verifyBankAccount, getExchangeRate } from "./roqquService.js";
 
-dotenv.config();
+require("dotenv").config();
+const express = require('express');
 
-const app = express();
 app.use(cors());
-app.use(express.json());
+app.use(express.json()); 
 
-const PORT = process.env.PORT || 5001;
+const port = process.env.PORT || 3000;
+const cors = require('cors');
+
+app.use(cors({
+  origin: ['https://rampme.vercel.app', 'http://localhost:3000'],
+  methods: ['GET', 'POST', 'PUT', 'DELETE', 'OPTIONS'],
+  credentials: true
+}));
 
 app.get("/", (req, res) => {
   res.send("🚀 Stablecoin Off-Ramp API Backend is Live!");
@@ -61,6 +68,6 @@ app.post("/api/offramp", async (req, res) => {
   }
 });
 
-app.listen(PORT, () => {
-  console.log(`Backend server running on http://localhost:${PORT}`);
+app.listen(port, () => {
+  console.log(`Server is running on port ${port}`);
 });
