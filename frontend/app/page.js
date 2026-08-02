@@ -7,13 +7,13 @@ import { useAppKitAccount, useAppKitProvider } from '@reown/appkit/react';
 // Dynamic Backend URL
 const BACKEND_URL = process.env.NEXT_PUBLIC_BACKEND_URL || "http://localhost:5001";
 
-// Minimal ERC-20 ABI required for approving and sending transfers
+// Minimal ERC-20 ABI required for approving, sending transfers, and reading balance
 const ERC20_ABI = [
   "function approve(address spender, uint256 amount) returns (bool)",
   "function allowance(address owner, address spender) view returns (uint256)",
   "function balanceOf(address account) view returns (uint256)",
   "function decimals() view returns (uint8)",
-  "function transfer(address to, uint256 amount) returns (bool)"
+  "function transfer(address to, uint256 amount) returns (bool)" 
 ];
 
 // Deployed Escrow Contract Address on Base Sepolia
@@ -28,7 +28,7 @@ export default function Home() {
   const { walletProvider } = useAppKitProvider('eip155');
 
   const [amount, setAmount] = useState("");
-  const [tokenSymbol, setTokenSymbol] = useState("USDT");
+  const [tokenSymbol, setTokenSymbol] = useState("USDC");
   const [targetCurrency, setTargetCurrency] = useState("NGN");
   const [bankCode, setBankCode] = useState("044");
   const [accountNumber, setAccountNumber] = useState("");
@@ -38,6 +38,10 @@ export default function Home() {
   const [currencySymbol, setCurrencySymbol] = useState("₦");
   const [serviceFeePercent, setServiceFeePercent] = useState(1.5);
   const [flatFee, setFlatFee] = useState(100);
+
+  // USDC Token Balance State
+  const [usdcBalance, setUsdcBalance] = useState("0.00");
+  const [isBalanceLoading, setIsBalanceLoading] = useState(false);
 
   // Validation States
   const [accountName, setAccountName] = useState("");
@@ -66,6 +70,33 @@ export default function Home() {
       }
     } catch (err) {
       console.error("Failed to fetch rate", err);
+    }
+  };
+
+  // Fetch On-Chain USDC Balance
+  useEffect(() => {
+    if (isConnected && account && walletProvider) {
+      fetchUsdcBalance();
+    } else {
+      setUsdcBalance("0.00");
+    }
+  }, [account, isConnected, walletProvider]);
+
+  const fetchUsdcBalance = async () => {
+    setIsBalanceLoading(true);
+    try {
+      const provider = new ethers.BrowserProvider(walletProvider);
+      const tokenContract = new ethers.Contract(MOCK_TOKEN_ADDRESS, ERC20_ABI, provider);
+      
+      const rawBalance = await tokenContract.balanceOf(account);
+      // USDC uses 6 decimals
+      const formatted = ethers.formatUnits(rawBalance, 6);
+      setUsdcBalance(Number(formatted).toFixed(2));
+    } catch (err) {
+      console.error("Failed to fetch USDC balance:", err);
+      setUsdcBalance("0.00");
+    } finally {
+      setIsBalanceLoading(false);
     }
   };
 
@@ -109,8 +140,6 @@ export default function Home() {
   const grossFiat = amount && exchangeRate ? parseFloat(amount) * exchangeRate : 0;
   const serviceFeeFiat = grossFiat ? (grossFiat * (serviceFeePercent / 100)) + flatFee : 0;
   const netPayoutFiat = Math.max(0, grossFiat - serviceFeeFiat);
-
-// Use the active AppKit wallet provider instead of window.ethereum directly
 
   const handleOffRamp = async (e) => {
     e.preventDefault();
@@ -175,6 +204,9 @@ export default function Home() {
         setAmount("");
         setAccountNumber("");
         setAccountName("");
+        
+        // Refresh USDC Balance after successful transaction
+        fetchUsdcBalance();
       } else {
         setStatusMessage("❌ Backend Payout Error: " + data.message);
       }
@@ -198,11 +230,25 @@ export default function Home() {
           Stablecoin Off-Ramp
         </h1>
         
-        {/* Rate Display Header */}
-        <div className="flex justify-center items-center gap-2 mb-6">
+        {/* Rate Display & USDC Balance Pill */}
+        <div className="flex flex-col items-center gap-2 mb-6">
           <span className="text-xs bg-slate-700 text-slate-300 px-3 py-1 rounded-full border border-slate-600">
             1 {tokenSymbol} = <strong className="text-emerald-400">{currencySymbol}{exchangeRate.toLocaleString()} {targetCurrency}</strong>
           </span>
+
+          {/* Wallet & USDC Balance Badge */}
+          {isConnected && account && (
+            <div className="flex items-center gap-2 px-3 py-1 bg-slate-900/80 border border-slate-700 rounded-full text-xs text-slate-300">
+              <span className="w-2 h-2 rounded-full bg-emerald-400 animate-pulse"></span>
+              <span className="font-mono text-slate-400">
+                {account.slice(0, 4)}...{account.slice(-4)}
+              </span>
+              <span className="text-slate-600">|</span>
+              <span className="font-semibold text-white">
+                {isBalanceLoading ? "Loading..." : `${usdcBalance} USDC`}
+              </span>
+            </div>
+          )}
         </div>
 
         {/* AppKit Connect Wallet Button */}
@@ -220,8 +266,8 @@ export default function Home() {
                 onChange={(e) => setTokenSymbol(e.target.value)}
                 className="w-full px-3 py-2.5 bg-slate-900 border border-slate-700 rounded-xl text-xs font-semibold text-blue-400 focus:outline-none"
               >
-                <option value="USDT">USDT</option>
                 <option value="USDC">USDC</option>
+                <option value="USDT">USDT</option>
               </select>
             </div>
 
@@ -243,7 +289,18 @@ export default function Home() {
 
           {/* Amount Input */}
           <div>
-            <label className="block text-xs font-medium text-slate-300 mb-1">Amount ({tokenSymbol})</label>
+            <div className="flex justify-between items-center mb-1">
+              <label className="block text-xs font-medium text-slate-300">Amount ({tokenSymbol})</label>
+              {isConnected && (
+                <button
+                  type="button"
+                  onClick={() => setAmount(usdcBalance)}
+                  className="text-[10px] text-blue-400 hover:text-blue-300 font-semibold uppercase"
+                >
+                  Use Max ({usdcBalance})
+                </button>
+              )}
+            </div>
             <input
               type="number"
               placeholder="e.g. 50"
