@@ -26,7 +26,7 @@ export function AppKitProvider({ children }) {
         networks: [baseSepolia, solanaDevnet],
         projectId,
         metadata: {
-          name: 'Stablecoin Off-Ramp',
+          name: 'Rampme Stablecoin ',
           description: 'Convert Crypto to Fiat',
           url: 'https://rampme.vercel.app', 
           icons: ['https://avatars.githubusercontent.com/u/179229932']
