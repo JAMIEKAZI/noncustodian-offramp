@@ -227,7 +227,7 @@ export default function Home() {
     <main className="min-h-screen bg-slate-900 text-white flex flex-col items-center justify-center p-6">
       <div className="max-w-md w-full bg-slate-800 rounded-2xl p-8 border border-slate-700 shadow-2xl">
         <h1 className="text-2xl font-bold text-center mb-1 bg-gradient-to-r from-blue-400 to-emerald-400 bg-clip-text text-transparent">
-          Stablecoin Off-Ramp
+          Rampme Stablecoin 
         </h1>
         
         {/* Rate Display & USDC Balance Pill */}
