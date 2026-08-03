@@ -28,7 +28,7 @@ export function AppKitProvider({ children }) {
         metadata: {
           name: 'Stablecoin Off-Ramp',
           description: 'Convert Crypto to Fiat',
-          url: 'http://localhost:3000', 
+          url: 'https://rampme.vercel.app', 
           icons: ['https://avatars.githubusercontent.com/u/179229932']
         },
         features: {
